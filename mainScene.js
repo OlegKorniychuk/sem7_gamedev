@@ -14,6 +14,10 @@ class MainScene extends Phaser.Scene {
       'assets/dude.png',
       { frameWidth: 32, frameHeight: 48 }
     );
+    this.load.spritesheet('arrow', 
+      'assets/arrow.png',
+      { frameWidth: 32, frameHeight: 48 }
+    );
   }
 
   create () {
@@ -42,6 +46,25 @@ class MainScene extends Phaser.Scene {
         onComplete: () => {
           bonusText.destroy();
         }
+      });
+    }
+
+    const death = () => {
+      this.physics.pause();
+
+      this.player.setTint(0xff0000);
+  
+      this.player.anims.play('turn');
+  
+      this.gameOver = true;
+
+      this.time.addEvent({
+        delay: 700,
+        callback: () => {
+          this.scene.stop('MainScene')
+          this.scene.start('GameOverScene', this.score);
+        },
+        callbackScope: this,
       });
     }
 
@@ -79,7 +102,7 @@ class MainScene extends Phaser.Scene {
       }
     });
 
-    // this.player animations
+    // player animations
     this.anims.create({
       key: 'left',
       frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -99,6 +122,72 @@ class MainScene extends Phaser.Scene {
       frameRate: 10,
       repeat: -1
     });
+
+    // arrow
+    this.anims.create({
+      key: 'arrow_left',
+      frames: [ { key: 'arrow', frame: 0 } ],
+      frameRate: 20
+    });
+  
+    this.anims.create({
+      key: 'arrow_right',
+      frames: [ { key: 'arrow', frame: 1 } ],
+      frameRate: 20
+    });
+  
+    this.arrows = this.physics.add.group({ allowGravity: false });
+
+    const spawnArrow = () => {
+      const startFromLeft = Phaser.Math.Between(0, 1) === 0;
+      const x = startFromLeft ? 0 : 800; //
+      const y = Phaser.Math.Between(100, 500);
+      const warningText = this.add.text(startFromLeft ? 0 : 760, y, '!', {
+        fontSize: '48px',
+        fill: '#ff0000',
+        strokeThickness: 10
+      });
+    
+      this.tweens.add({
+        targets: warningText,
+        alpha: 0,
+        duration: 1500,
+        onComplete: () => {
+          warningText.destroy();
+
+          const velocity = startFromLeft ? 250 : -250;
+          const arrow = this.arrows.create(x, y, 'arrow');
+        
+          arrow.setVelocityX(velocity);
+          arrow.setCollideWorldBounds(false);
+          arrow.setBounce(1);
+        
+          if (startFromLeft) {
+            arrow.anims.play('arrow_right');
+          } else {
+            arrow.anims.play('arrow_left');
+          }
+        
+          arrow.checkWorldBounds = true;
+          arrow.outOfBoundsKill = true;
+        }
+      });
+    }
+
+    this.time.addEvent({
+      delay: Phaser.Math.Between(1000, 3000),
+      callback: spawnArrow,
+      callbackScope: this,
+      loop: true,
+    });
+
+    this.physics.add.collider(
+      this.player, 
+      this.arrows, 
+      death, 
+      null, 
+      this
+    );
 
     // stars
     this.stars = this.physics.add.group({
@@ -147,18 +236,7 @@ class MainScene extends Phaser.Scene {
     this.physics.add.collider(
       this.player, 
       this.bombs, 
-      () => {
-        this.physics.pause();
-
-        this.player.setTint(0xff0000);
-    
-        this.player.anims.play('turn');
-    
-        this.gameOver = true;
-        
-        this.scene.stop('MainScene')
-        this.scene.start('GameOverScene', this.score);
-      }, 
+      death, 
       null, 
       this
     );
