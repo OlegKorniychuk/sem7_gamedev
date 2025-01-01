@@ -22,6 +22,7 @@ let platforms
 let score = 0;
 let scoreText;
 
+// loading images
 function preload () {
   this.load.image('sky', 'assets/sky.png');
   this.load.image('ground', 'assets/platform.png');
@@ -135,8 +136,12 @@ function create () {
   );
 
   // score
+  scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-  scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+  // powerslam status
+  this.powerslamReady = true
+  this.powerslamCharging = 0;
+  this.powerslamStatus = this.add.text(16, 52, 'Powerslam: Ready', { fontSize:'32px', fill: '#000' })
 }
 
 // player movement
@@ -154,5 +159,26 @@ function update () {
     
   if (cursors.up.isDown && player.body.touching.down) {
     player.setVelocityY(-330);
+  }
+
+  if (cursors.down.isDown & this.powerslamReady) {
+    player.setVelocityY(500)
+    this.powerslamReady = false;
+    this.powerslamCharging = 0;
+    this.powerslamStatus.setText('Powerslam: Charging (0%)');
+
+    this.time.addEvent({
+      delay: 500,
+      repeat: 9,
+      callback: () => {
+        this.powerslamCharging += 10;
+        this.powerslamStatus.setText(`Powerslam: Charging (${this.powerslamCharging}%)`);
+        if (this.powerslamCharging >= 100) {
+          this.powerslamReady = true;
+          this.powerslamStatus.setText('Powerslam: Ready');
+        }
+      },
+      callbackScope: this
+    });
   }
 }
