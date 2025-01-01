@@ -172,7 +172,7 @@ class MainScene extends Phaser.Scene {
 
       if (attempts == 0) return;
 
-      const warningText = this.add.text(startFromLeft ? 0 : 760, y, '!', {
+      const warningText = this.add.text(startFromLeft ? 0 : 760, y - 24, '!', {
         fontSize: '48px',
         fill: '#ff0000',
         strokeThickness: 10
