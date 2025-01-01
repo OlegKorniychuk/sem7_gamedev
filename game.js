@@ -28,6 +28,7 @@ function preload () {
   this.load.image('ground', 'assets/platform.png');
   this.load.image('star', 'assets/star.png');
   this.load.image('bomb', 'assets/bomb.png');
+  this.load.image('powerslam', 'assets/powerslam.png');
   this.load.spritesheet('dude', 
     'assets/dude.png',
     { frameWidth: 32, frameHeight: 48 }
@@ -75,7 +76,22 @@ function create () {
   player.setBounce(0.2);
   player.setCollideWorldBounds(true);
 
-  this.physics.add.collider(player, platforms);
+  this.physics.add.collider(player, platforms, () => {
+    if (this.isPowerslamming) {
+      const powerslamEffect = this.add.image(player.x, player.y - 24, 'powerslam').setScale(2); // 24 - halve of the powerslam sprites height to account for resizing
+  
+      this.tweens.add({
+        targets: powerslamEffect,
+        alpha: 0,
+        duration: 1000,
+        onComplete: () => {
+          powerslamEffect.destroy();
+        }
+      });
+  
+      this.isPowerslamming = false;
+    }
+  });
 
   // player animations
   this.anims.create({
@@ -187,9 +203,11 @@ function update () {
 
   if (cursors.down.isDown & this.powerslamReady) {
     player.setVelocityY(500)
+
     this.powerslamReady = false;
     this.powerslamCharging = 0;
     this.powerslamStatus.setText('Powerslam: Charging (0%)');
+    this.isPowerslamming = true
 
     this.time.addEvent({
       delay: 500,
