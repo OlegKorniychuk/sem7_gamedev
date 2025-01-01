@@ -16,7 +16,7 @@ class MainScene extends Phaser.Scene {
     );
     this.load.spritesheet('arrow', 
       'assets/arrow.png',
-      { frameWidth: 32, frameHeight: 48 }
+      { frameWidth: 32, frameHeight: 12 }
     );
   }
 
@@ -138,10 +138,40 @@ class MainScene extends Phaser.Scene {
   
     this.arrows = this.physics.add.group({ allowGravity: false });
 
+    function isArrowPositionValid(y, platforms) {
+      let isValid = true;
+    
+      platforms.children.iterate((platform) => {
+        const platformBounds = platform.getBounds();
+    
+        if (
+          y >= platformBounds.top &&
+          y <= platformBounds.bottom
+        ) {
+          isValid = false;
+        }
+      });
+    
+      return isValid;
+    }
+
     const spawnArrow = () => {
-      const startFromLeft = Phaser.Math.Between(0, 1) === 0;
-      const x = startFromLeft ? 0 : 800; //
-      const y = Phaser.Math.Between(100, 500);
+      let attempts = 10;
+      let x, y, startFromLeft
+
+      while (attempts > 0) {
+        startFromLeft = Phaser.Math.Between(0, 1) === 0;
+        x = startFromLeft ? 0 : 800;
+        y = Phaser.Math.Between(100, 500);
+        attempts--;
+
+        if (isArrowPositionValid(y, this.platforms)) {
+          break;
+        }
+      } 
+
+      if (attempts == 0) return;
+
       const warningText = this.add.text(startFromLeft ? 0 : 760, y, '!', {
         fontSize: '48px',
         fill: '#ff0000',
@@ -175,7 +205,7 @@ class MainScene extends Phaser.Scene {
     }
 
     this.time.addEvent({
-      delay: Phaser.Math.Between(1000, 3000),
+      delay: Phaser.Math.Between(2000, 3000),
       callback: spawnArrow,
       callbackScope: this,
       loop: true,
