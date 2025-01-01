@@ -37,6 +37,27 @@ function preload () {
 function create () {
   cursors = this.input.keyboard.createCursorKeys();
 
+  const updateScore = (score) => {
+    this.score += score;
+    this.scoreText.setText('Score: ' + this.score);
+  
+    const scoreTextX = this.scoreText.x + this.scoreText.width + 20;
+    const scoreTextY = Phaser.Math.Between(this.scoreText.y - 10, this.scoreText.y + 10)
+    const bonusText = this.add.text(scoreTextX, scoreTextY, '+10', {
+      fontSize: '32px',
+      fill: '#ff0000'
+    });
+  
+    this.tweens.add({
+      targets: bonusText,
+      alpha: 0,
+      duration: 1000,
+      onComplete: () => {
+        bonusText.destroy();
+      }
+    });
+  }
+
   // background
   this.add.image(400, 300, 'sky');
 
@@ -90,26 +111,28 @@ function create () {
 
   this.physics.add.collider(stars, platforms);
 
+  function collectStar(player, star) {
+    star.disableBody(true, true);
+  
+    updateScore(10);
+  
+    if (stars.countActive(true) === 0) {
+      stars.children.iterate(function (child) {
+        child.enableBody(true, child.x, 0, true, true);
+      });
+  
+      const x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+  
+      const bomb = bombs.create(x, 16, 'bomb');
+      bomb.setBounce(1);
+      bomb.setCollideWorldBounds(true);
+      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    }
+  }
+
   this.physics.add.overlap(player, 
     stars, 
-    (player, star) => {
-      star.disableBody(true, true);
-      score += 10;
-      scoreText.setText('Score: ' + score);
-
-      if (stars.countActive(true) === 0) {
-        stars.children.iterate(function (child) {
-            child.enableBody(true, child.x, 0, true, true);
-        });
-
-        let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-        let bomb = bombs.create(x, 16, 'bomb');
-        bomb.setBounce(1);
-        bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-      }
-    }, 
+    collectStar, 
     null, 
     this
   );
@@ -136,7 +159,8 @@ function create () {
   );
 
   // score
-  scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
+  this.score = 0;
+  this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
   // powerslam status
   this.powerslamReady = true
