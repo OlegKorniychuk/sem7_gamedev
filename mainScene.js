@@ -17,6 +17,11 @@ class MainScene extends Phaser.Scene {
   }
 
   create () {
+    this.input.keyboard.on('keydown-ESC', () => {
+      this.scene.pause('MainScene');
+      this.scene.launch('PauseScene');
+    }, this);
+
     this.cursors = this.input.keyboard.createCursorKeys();
 
     const updateScore = (score) => {
@@ -150,6 +155,9 @@ class MainScene extends Phaser.Scene {
         this.player.anims.play('turn');
     
         this.gameOver = true;
+        
+        this.scene.stop('MainScene')
+        this.scene.start('GameOverScene', this.score);
       }, 
       null, 
       this
