@@ -13,6 +13,7 @@ Added improvements include:
 - A much larger map
 - Improved score counter
 - Refactored and improved code
+
 And more
 
 Try The Dude here:
