@@ -10,7 +10,7 @@ class MenuScene extends Phaser.Scene {
   create() {
     this.add.image(400, 300, 'sky');
 
-    this.startButton = this.add.text(350, 300, 'Start Game', { fontSize: '32px', fill: 'black' })
+    this.startButton = this.add.text(320, 280, 'Start Game', { fontSize: '32px', fill: 'black' })
     .setInteractive()
     .on('pointerdown', () => {
       this.scene.start('MainScene');
