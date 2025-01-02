@@ -18,6 +18,10 @@ class MainScene extends Phaser.Scene {
       'assets/arrow.png',
       { frameWidth: 32, frameHeight: 12 }
     );
+    this.load.spritesheet('baddie', 
+      'assets/baddie.png',
+      { frameWidth: 48, frameHeight: 48 }
+    );
   }
 
   create () {
@@ -34,7 +38,7 @@ class MainScene extends Phaser.Scene {
     
       const scoreTextX = this.scoreText.x + this.scoreText.width + 20;
       const scoreTextY = Phaser.Math.Between(this.scoreText.y - 10, this.scoreText.y + 10)
-      const bonusText = this.add.text(scoreTextX, scoreTextY, '+10', {
+      const bonusText = this.add.text(scoreTextX, scoreTextY, `+${score}`, {
         fontSize: '32px',
         fill: '#ff0000'
       });
@@ -226,7 +230,7 @@ class MainScene extends Phaser.Scene {
       setXY: { x: 12, y: 0, stepX: 70 }
     });
 
-    this.stars.children.iterate(function (child) {
+    this.stars.children.iterate((child) => {
       child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
 
@@ -267,6 +271,78 @@ class MainScene extends Phaser.Scene {
       this.player, 
       this.bombs, 
       death, 
+      null, 
+      this
+    );
+
+    // enemy
+
+    this.anims.create({
+      key: 'enemy_left',
+      frames: this.anims.generateFrameNumbers('baddie', { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: -1
+    });
+    
+    this.anims.create({
+      key: 'enemy_right',
+      frames: this.anims.generateFrameNumbers('baddie', { start: 5, end: 8 }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    this.enemies = this.physics.add.group();
+    this.physics.add.collider(this.enemies, this.platforms);
+
+    const spawnEnemy = () => {
+      const platformArray = this.platforms.getChildren().slice(1);
+      const randomPlatform = Phaser.Utils.Array.GetRandom(platformArray);
+      const platformBounds = randomPlatform.getBounds();
+      
+      let spawnX;
+      let spawnFromLeft = false;
+      if (platformBounds.left + 5 <= 5) {
+        spawnX = platformBounds.left + 10
+        spawnFromLeft = true;
+      } else {
+        spawnX = platformBounds.right - 10
+      }
+    
+      const enemy = this.enemies.create(
+        spawnX,
+        platformBounds.top - 20,
+        'enemy'
+      );
+    
+      enemy.setBounce(0);
+      enemy.setCollideWorldBounds(false);
+      enemy.setGravityY(0);
+      enemy.body.allowGravity = false;
+    
+      enemy.direction = spawnFromLeft ? -1 : 1; // Move right if spawned from left, and vice versa
+      enemy.setVelocityX(enemy.direction * 100);
+    
+      if (enemy.direction < 0) {
+        enemy.anims.play('enemy_left', true);
+      } else {
+        enemy.anims.play('enemy_right', true);
+      }
+    };
+
+    spawnEnemy()
+
+    this.physics.add.collider(
+      this.player, 
+      this.enemies, 
+      (player, enemy) => {
+        if (!this.isPowerslamming) {
+          death();
+        } else {
+          enemy.destroy()
+          updateScore(50)
+          spawnEnemy()
+        }
+      }, 
       null, 
       this
     );
@@ -320,5 +396,31 @@ class MainScene extends Phaser.Scene {
         callbackScope: this
       });
     }
+
+    // prevent enemy from falling
+    this.enemies.getChildren().forEach((enemy) => {
+      if (enemy.direction < 0) {
+        enemy.anims.play('enemy_left', true);
+      } else {
+        enemy.anims.play('enemy_right', true);
+      }
+
+      const enemyBounds = enemy.getBounds();
+      const platform = this.platforms.getChildren().find((plat) => {
+        const platformBounds = plat.getBounds();
+        return (
+          enemyBounds.centerX >= platformBounds.left + 10 &&
+          enemyBounds.centerX <= platformBounds.right - 10 &&
+          enemyBounds.bottom <= platformBounds.top + 5 &&
+          enemyBounds.bottom >= platformBounds.top - 10
+        );
+      });
+
+      if (!platform || enemy.body.checkWorldBounds()) {
+        enemy.x -= 10 * enemy.direction
+        enemy.direction *= -1;
+        enemy.setVelocityX(enemy.direction * 100);
+      }
+    });
   }
 }
