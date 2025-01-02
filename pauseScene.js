@@ -4,7 +4,7 @@ class PauseScene extends Phaser.Scene {
   }
 
   create() {
-    this.resumeButon = this.add.text(350, 300, 'Resume', { fontSize: '32px', fill: 'white' })
+    this.resumeButon = this.add.text(720, 380, 'Resume', { fontSize: '32px', fill: 'white' })
     .setInteractive()
     .on('pointerdown', () => {
       this.scene.stop('PauseScene');

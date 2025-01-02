@@ -73,25 +73,28 @@ class MainScene extends Phaser.Scene {
     }
 
     // background
-    this.add.image(400, 300, 'sky');
+    this.add.image(800, 450, 'sky').setScale(2);
 
     // platforms
     this.platforms = this.physics.add.staticGroup();
-    this.platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+    this.platforms.create(800, 840, 'ground').setScale(4).refreshBody();
 
-    this.platforms.create(600, 400, 'ground');
-    this.platforms.create(50, 250, 'ground');
-    this.platforms.create(750, 220, 'ground');
+    this.platforms.create(600, 500, 'ground');
+    this.platforms.create(1200, 650, 'ground');
+    this.platforms.create(1300, 450, 'ground');
+    this.platforms.create(50, 350, 'ground');
+    this.platforms.create(750, 320, 'ground');
+    this.platforms.create(100, 630, 'ground');
 
     // player sprite
-    this.player = this.physics.add.sprite(100, 450, 'dude');
+    this.player = this.physics.add.sprite(800, 650, 'dude');
 
     this.player.setBounce(0.2);
     this.player.setCollideWorldBounds(true);
 
     this.physics.add.collider(this.player, this.platforms, () => {
       if (this.isPowerslamming) {
-        const powerslamEffect = this.add.image(this.player.x, this.player.y - 24, 'powerslam').setScale(2); // 24 - halve of the powerslam sprites height to account for resizing
+        const powerslamEffect = this.add.image(this.player.x, this.player.y - 24, 'powerslam').setScale(2); // 24 - halve of the powerslam sprite's height to account for resizing
     
         this.tweens.add({
           targets: powerslamEffect,
@@ -165,8 +168,8 @@ class MainScene extends Phaser.Scene {
 
       while (attempts > 0) {
         startFromLeft = Phaser.Math.Between(0, 1) === 0;
-        x = startFromLeft ? 0 : 800;
-        y = Phaser.Math.Between(100, 500);
+        x = startFromLeft ? 0 : 1600;
+        y = Phaser.Math.Between(100, 700);
         attempts--;
 
         if (isArrowPositionValid(y, this.platforms)) {
@@ -176,7 +179,7 @@ class MainScene extends Phaser.Scene {
 
       if (attempts == 0) return;
 
-      const warningText = this.add.text(startFromLeft ? 0 : 760, y - 24, '!', {
+      const warningText = this.add.text(startFromLeft ? 0 : 1560, y - 24, '!', {
         fontSize: '48px',
         fill: '#ff0000',
         strokeThickness: 10
@@ -227,7 +230,7 @@ class MainScene extends Phaser.Scene {
     this.stars = this.physics.add.group({
       key: 'star',
       repeat: 11,
-      setXY: { x: 12, y: 0, stepX: 70 }
+      setXY: { x: 12, y: 0, stepX: Phaser.Math.Between(100, 150) }
     });
 
     this.stars.children.iterate((child) => {
